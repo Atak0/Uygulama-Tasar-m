@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpineAI - Omurga X-Ray Analiz Sistemi</title>
+    <meta name="description" content="Yapay zeka destekli omurga X-ray analiz sistemi. Skolyoz, spondilolistezis tespiti ve Grad-CAM görselleştirmesi.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- --------------------------------------- -->
+    <!-- SIDEBAR NAVIGATION                      -->
+    <!-- --------------------------------------- -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo" id="logoHome" role="button" tabindex="0" aria-label="Kontrol paneline git">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 40 40" fill="none">
+                        <circle cx="20" cy="20" r="18" stroke="url(#logoGrad)" stroke-width="2.5" fill="none"/>
+                        <path d="M20 8 C20 8, 16 12, 16 15 C16 18, 20 18, 20 20 C20 22, 24 22, 24 25 C24 28, 20 28, 20 32" 
+                              stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                        <circle cx="20" cy="15" r="2" fill="url(#logoGrad)"/>
+                        <circle cx="20" cy="20" r="2" fill="url(#logoGrad)"/>
+                        <circle cx="20" cy="25" r="2" fill="url(#logoGrad)"/>
+                        <defs>
+                            <linearGradient id="logoGrad" x1="0" y1="0" x2="40" y2="40">
+                                <stop offset="0%" stop-color="#6366f1"/>
+                                <stop offset="100%" stop-color="#06b6d4"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <span class="logo-title">SpineAI</span>
+                    <span class="logo-subtitle">Klinik Karar Destek</span>
+                </div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-page="dashboard" id="nav-dashboard">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7" rx="1"/>
+                    <rect x="14" y="3" width="7" height="7" rx="1"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1"/>
+                    <rect x="14" y="14" width="7" height="7" rx="1"/>
+                </svg>
+                <span>Kontrol Paneli</span>
+            </a>
+            <a href="#" class="nav-item" data-page="analysis" id="nav-analysis">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="M21 21l-4.35-4.35"/>
+                    <path d="M11 8v6M8 11h6"/>
+                </svg>
+                <span>Yeni Analiz</span>
+            </a>
+            <a href="#" class="nav-item" data-page="history" id="nav-history">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span>Geçmiş Analizler</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div id="doctorProfile" class="doctor-profile" role="button" tabindex="0" aria-label="Hesap ayarlarını aç">
+                <div class="doctor-profile-name" id="sidebarDoctorName">Yükleniyor...</div>
+                <div class="doctor-profile-title" id="sidebarDoctorTitle"></div>
+            </div>
+            <div class="model-badge">
+                <div class="model-badge-dot"></div>
+                <span>EfficientNetB0 Aktif</span>
+            </div>
+            <div class="sidebar-version">v1.0 - Araştırma Amaçlıdır</div>
+            <button class="btn btn-outline btn-ghost" id="btnLogout" style="margin-top:8px; width:100%;">Çıkış Yap</button>
+        </div>
+    </aside>
+
+    <!-- --------------------------------------- -->
+    <!-- MAIN CONTENT                            -->
+    <!-- --------------------------------------- -->
+    <main class="main-content" id="mainContent">
+
+        <!-- MOBILE HEADER -->
+        <header class="mobile-header">
+            <button class="menu-toggle" id="menuToggle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+            </button>
+            <span class="mobile-title">SpineAI</span>
+        </header>
+
+        <!-- --- PAGE: DASHBOARD --- -->
+        <section class="page active" id="page-dashboard">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Kontrol Paneli</h1>
+                    <p class="page-subtitle">Omurga X-Ray analiz istatistikleri ve genel bakış</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-primary" id="btnNewAnalysis">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Yeni Analiz
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-total">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="statTotal">-</span>
+                        <span class="stat-label">Toplam Analiz</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-normal">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="statNormal">-</span>
+                        <span class="stat-label">Normal</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-kayma">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="statKayma">-</span>
+                        <span class="stat-label">Bel Kayması</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-skolyoz">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="statSkolyoz">-</span>
+                        <span class="stat-label">Skolyoz</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Confidence & Distribution -->
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Sınıf Dağılımı</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="distribution-chart" id="distributionChart">
+                            <div class="empty-state-mini">Henüz analiz yapılmadı</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Son Analizler</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="recent-list" id="recentList">
+                            <div class="empty-state-mini">Henüz analiz yapılmadı</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Disclaimer -->
+            <div class="disclaimer">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <div>
+                    <strong>Uyarı:</strong> Bu sistem araştırma amaçlıdır ve klinik karar verme sürecinde tek başına referans alınmamalıdır. 
+                    Sonuçlar mutlaka uzman hekim tarafından değerlendirilmelidir. Bu araç yalnızca karar destek sistemi olarak kullanılmalıdır.
+                </div>
+            </div>
+        </section>
+
+        <!-- --- PAGE: ANALYSIS --- -->
+        <section class="page" id="page-analysis">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Yeni Analiz</h1>
+                    <p class="page-subtitle">X-ray görüntüsü yükleyin, AI destekli omurga analizi yapın</p>
+                </div>
+            </div>
+
+            <div class="analysis-layout">
+                <!-- Upload Panel -->
+                <div class="card upload-card" id="uploadCard">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;margin-right:8px;vertical-align:middle">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                            Görüntü Yükleme
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Drop Zone -->
+                        <div class="drop-zone" id="dropZone">
+                            <div class="drop-zone-content">
+                                <div class="drop-icon">
+                                    <svg viewBox="0 0 64 64" fill="none">
+                                        <rect x="8" y="8" width="48" height="48" rx="8" stroke="currentColor" stroke-width="2" stroke-dasharray="4 4"/>
+                                        <path d="M32 20v24M20 32h24" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    </svg>
+                                </div>
+                                <p class="drop-text">X-Ray görüntüsünü sürükleyip bırakın</p>
+                                <p class="drop-subtext">veya dosya seçmek için tıklayın</p>
+                                <p class="drop-formats">PNG, JPG, JPEG, BMP, TIFF, WEBP - Maks 50MB</p>
+                            </div>
+                            <input type="file" id="fileInput" accept=".png,.jpg,.jpeg,.bmp,.tiff,.webp" hidden>
+                        </div>
+
+                        <!-- Preview -->
+                        <div class="preview-area" id="previewArea" style="display:none">
+                            <div class="preview-image-wrapper">
+                                <img id="previewImage" alt="X-Ray önizleme">
+                                <button class="preview-remove" id="previewRemove" title="Kaldir">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                </button>
+                            </div>
+                            <div class="preview-info">
+                                <span id="previewFilename"></span>
+                                <span id="previewSize"></span>
+                            </div>
+                        </div>
+
+                        <!-- Patient Info -->
+                        <div class="form-section">
+                            <h4 class="form-section-title">Hasta ve Model Bilgileri</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="modelType">Analiz Modeli</label>
+                                    <select id="modelType" style="background:var(--bg-input); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 14px; color:var(--text-primary); font-family:var(--font); font-size:.88rem; outline:none;">
+                                        <option value="multiclass">Multiclass (Normal, Kayma, Skolyoz)</option>
+                                        <option value="skolyoz">Skolyoz Tespiti (Normal / Skolyoz)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="patientId">Hasta ID / Protokol No</label>
+                                    <input type="text" id="patientId" placeholder="Örn: P-2024-0001">
+                                </div>
+                                <div class="form-group">
+                                    <label for="patientName">Hasta Adı</label>
+                                    <input type="text" id="patientName" placeholder="Ad Soyad">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="clinicalNotes">Klinik Notlar</label>
+                                <textarea id="clinicalNotes" rows="3" placeholder="Ek klinik bilgiler, semptomlar, önceki bulgular..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Submit -->
+                        <button class="btn btn-primary btn-lg btn-analyze" id="btnAnalyze" disabled>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                            </svg>
+                            Analizi Başlat
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Results Panel -->
+                <div class="results-panel" id="resultsPanel" style="display:none">
+                    <!-- Loading -->
+                    <div class="card loading-card" id="loadingCard" style="display:none">
+                        <div class="loading-content">
+                            <div class="spine-loader">
+                                <div class="vertebra v1"></div>
+                                <div class="vertebra v2"></div>
+                                <div class="vertebra v3"></div>
+                                <div class="vertebra v4"></div>
+                                <div class="vertebra v5"></div>
+                            </div>
+                            <p class="loading-text">Görüntü analiz ediliyor...</p>
+                            <p class="loading-subtext">Ön işleme -> Model çıkarımı -> Grad-CAM oluşturma</p>
+                        </div>
+                    </div>
+
+                    <!-- Result Card -->
+                    <div id="resultContent" style="display:none">
+                        <!-- Diagnosis Header -->
+                        <div class="card diagnosis-card" id="diagnosisCard">
+                            <div class="diagnosis-header">
+                                <div class="diagnosis-icon" id="diagnosisIcon"></div>
+                                <div class="diagnosis-info">
+                                    <div class="diagnosis-label">AI Ön Tanı</div>
+                                    <div class="diagnosis-name" id="diagnosisName"></div>
+                                    <div class="diagnosis-confidence">
+                                        <div class="confidence-bar-wrapper">
+                                            <div class="confidence-bar" id="confidenceBar"></div>
+                                        </div>
+                                        <span class="confidence-text" id="confidenceText"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="diagnosis-description" id="diagnosisDesc"></div>
+                            <div class="diagnosis-warning" id="diagnosisWarning" style="display:none">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                <span>Tahmin kararsızdır. En yüksek iki sınıf birbirine yakın - bu sonucu kesin kabul etmeyiniz.</span>
+                            </div>
+                        </div>
+
+                        <!-- Probability Bars -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Sınıf Olasılıkları</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="prob-bars" id="probBars"></div>
+                            </div>
+                        </div>
+
+                        <!-- Image Comparison (Grad-CAM) -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Grad-CAM Görselleştirmesi</h3>
+                                <p class="card-subtitle">Modelin karar verirken odaklandığı bölgeler</p>
+                            </div>
+                            <div class="card-body">
+                                <div class="image-tabs">
+                                    <button class="image-tab active" data-target="viewOriginal">Orijinal</button>
+                                    <button class="image-tab" data-target="viewProcessed">Ön İşlenmiş</button>
+                                    <button class="image-tab" data-target="viewHeatmap">Isı Haritası</button>
+                                    <button class="image-tab" data-target="viewOverlay">Bindirme</button>
+                                </div>
+                                <div class="image-viewer">
+                                    <div class="image-view active" id="viewOriginal">
+                                        <img id="imgOriginal" alt="Orijinal X-Ray">
+                                        <div class="image-label">Orijinal Görüntü</div>
+                                    </div>
+                                    <div class="image-view" id="viewProcessed">
+                                        <img id="imgProcessed" alt="Ön İşlenmiş">
+                                        <div class="image-label">CLAHE + Center Crop Uygulanmış</div>
+                                    </div>
+                                    <div class="image-view" id="viewHeatmap">
+                                        <img id="imgHeatmap" alt="Isı Haritası">
+                                        <div class="image-label">Grad-CAM Isı Haritası</div>
+                                    </div>
+                                    <div class="image-view" id="viewOverlay">
+                                        <img id="imgOverlay" alt="Grad-CAM Bindirme">
+                                        <div class="image-label">Grad-CAM Bindirme (Overlay)</div>
+                                    </div>
+                                </div>
+                                <div class="gradcam-legend" id="gradcamLegend" style="display:none;">
+                                    <div class="legend-bar"></div>
+                                    <div class="legend-labels">
+                                        <span>Düşük Aktivasyon</span>
+                                        <span>Yüksek Aktivasyon</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Analysis Meta -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Analiz Detayları</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="meta-grid" id="metaGrid"></div>
+                            </div>
+                        </div>
+                        <div class="analysis-finish">
+                            <button class="btn btn-outline btn-lg" id="btnFinishAnalysis">Analizi Bitir</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- --- PAGE: HISTORY --- -->
+        <section class="page" id="page-history">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Geçmiş Analizler</h1>
+                    <p class="page-subtitle">Daha önce yapılan tüm analizlerin listesi</p>
+                </div>
+                <div class="header-actions">
+                    <div class="search-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <input type="text" id="historySearch" placeholder="Hasta ID, isim veya tanı ara...">
+                    </div>
+                </div>
+            </div>
+
+            <div class="history-table-wrapper">
+                <table class="history-table" id="historyTable">
+                    <thead>
+                        <tr>
+                            <th>Tarih</th>
+                            <th>Hasta ID</th>
+                            <th>Hasta Adı</th>
+                            <th>Tanı</th>
+                            <th>Güven</th>
+                            <th>Durum</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody">
+                    </tbody>
+                </table>
+                <div class="empty-state" id="historyEmpty">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;opacity:0.4">
+                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    <p>Henüz analiz yapılmadı</p>
+                    <button class="btn btn-outline" id="btnGoToAnalysis">İlk Analizinizi Yapın</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal Container for Analysis Details -->
+    <div id="detailModal" class="modal-backdrop" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; justify-content:center; align-items:center;">
+        <div class="modal-content card" style="width:90%; max-width:800px; max-height:90vh; overflow-y:auto; position:relative;">
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 class="card-title">Analiz Detayı</h3>
+                <button id="closeModal" class="btn btn-ghost" style="padding:4px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="card-body" id="modalBody">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Settings Modal -->
+    <div id="profileModal" class="modal-backdrop app-modal" style="display:none;">
+        <div class="modal-content card profile-modal">
+            <div class="card-header modal-header">
+                <div>
+                    <h3 class="card-title">Hesap Ayarları</h3>
+                    <p class="card-subtitle">Profil bilgileri ve şifre güncelleme</p>
+                </div>
+                <button id="closeProfileModal" class="btn btn-ghost modal-close" aria-label="Kapat">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="card-body">
+                <form id="profileForm" class="settings-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="profileFullName">Ad Soyad</label>
+                            <input type="text" id="profileFullName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="profileTitle">Unvan</label>
+                            <input type="text" id="profileTitle" placeholder="Örn: Ortopedi Uzmanı">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="profileEmail">E-posta</label>
+                            <input type="email" id="profileEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="profileUsername">Kullanıcı Adı</label>
+                            <input type="text" id="profileUsername" disabled>
+                        </div>
+                    </div>
+                    <div class="settings-divider"></div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="profileCurrentPassword">Mevcut Şifre</label>
+                            <div class="password-field">
+                                <input type="password" id="profileCurrentPassword" placeholder="Şifre değişimi için gerekli">
+                                <button type="button" class="password-toggle" data-target="profileCurrentPassword">Göster</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="profileNewPassword">Yeni Şifre</label>
+                            <div class="password-field">
+                                <input type="password" id="profileNewPassword" placeholder="En az 6 karakter">
+                                <button type="button" class="password-toggle" data-target="profileNewPassword">Göster</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="profileConfirmPassword">Yeni Şifre Tekrar</label>
+                        <div class="password-field">
+                            <input type="password" id="profileConfirmPassword" placeholder="Yeni şifreyi tekrar girin">
+                            <button type="button" class="password-toggle" data-target="profileConfirmPassword">Göster</button>
+                        </div>
+                    </div>
+                    <div id="profileError" class="auth-error" style="display:none"></div>
+                    <button type="submit" class="btn btn-primary btn-block" id="btnSaveProfile">Değişiklikleri Kaydet</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Preview Modal -->
+    <div id="imageLightbox" class="image-lightbox" style="display:none;">
+        <button id="closeImageLightbox" class="btn btn-ghost modal-close lightbox-close" aria-label="Kapat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <img id="lightboxImage" alt="">
+        <div id="lightboxLabel"></div>
+        <button id="lightboxPrev" class="lightbox-nav lightbox-prev" aria-label="Önceki görsel">‹</button>
+        <button id="lightboxNext" class="lightbox-nav lightbox-next" aria-label="Sonraki görsel">›</button>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="app.js"></script>
+<script>
+// On page load, verify authentication
+fetch('/api/auth/me')
+  .then(r => r.json())
+  .then(data => {
+    if (!data.success) {
+      window.location.href = 'login.html';
+    } else {
+      const user = data.user;
+      window.currentUser = user;
+      document.getElementById('sidebarDoctorName').textContent = user.full_name || user.username;
+      document.getElementById('sidebarDoctorTitle').textContent = user.title || 'Doktor';
+      if (window.populateProfileForm) window.populateProfileForm(user);
+    }
+  })
+  .catch(() => {
+    window.location.href = 'login.html';
+  });
+</script>
+</body>
+</html>

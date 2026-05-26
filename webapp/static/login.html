@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giriş - SpineAI</title>
+    <meta name="description" content="SpineAI klinik karar destek sistemine giriş sayfası.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="auth-page">
+    <section class="auth-container">
+        <div class="auth-card">
+            <h1 class="auth-title">SpineAI</h1>
+            <h2 class="auth-subtitle">Klinik Karar Destek Sistemi</h2>
+
+            <form id="loginForm" class="auth-form">
+                <div class="form-group">
+                    <label for="loginUsername">Kullanıcı Adı</label>
+                    <input type="text" id="loginUsername" placeholder="Kullanıcı adınızı girin" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Şifre</label>
+                    <input type="password" id="loginPassword" placeholder="Şifrenizi girin" required>
+                </div>
+
+                <div id="loginError" class="auth-error" style="display:none"></div>
+
+                <button type="submit" class="btn btn-primary btn-block" id="btnLogin">Giriş Yap</button>
+                <button type="button" class="forgot-password-link" id="forgotPassword">Şifremi unuttum</button>
+            </form>
+
+            <p class="auth-switch">
+                Hesabınız yok mu? <a href="register.html" class="link">Kayıt Ol</a>
+            </p>
+        </div>
+    </section>
+
+    <script>
+        document.getElementById('forgotPassword').addEventListener('click', () => {
+            alert('Şifre sıfırlama özelliği yakında eklenecek.');
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errEl = document.getElementById('loginError');
+            errEl.style.display = 'none';
+
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            const btn = document.getElementById('btnLogin');
+            btn.disabled = true;
+            btn.textContent = 'Giriş yapılıyor...';
+
+            try {
+                const resp = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    window.location.href = 'index.html';
+                } else {
+                    errEl.textContent = data.error || 'Kullanıcı adı veya Şifre hatalı.';
+                    errEl.style.display = 'block';
+                }
+            } catch (err) {
+                console.error(err);
+                errEl.textContent = 'Sunucu hatası, lütfen daha sonra tekrar deneyin.';
+                errEl.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Giriş Yap';
+            }
+        });
+    </script>
+</body>
+</html>

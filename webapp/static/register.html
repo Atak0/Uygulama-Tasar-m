@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kayıt Ol - SpineAI</title>
+    <meta name="description" content="SpineAI klinik karar destek sistemine kayıt sayfası.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="auth-page">
+    <section class="auth-container auth-container-register">
+        <div class="auth-card auth-card-register">
+            <h1 class="auth-title">SpineAI</h1>
+            <h2 class="auth-subtitle">Yeni Hesap Oluştur</h2>
+
+            <form id="registerForm" class="auth-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="regFullName">Ad Soyad <span class="required">*</span></label>
+                        <input type="text" id="regFullName" placeholder="Dr. Ad Soyad" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="regTitle">Unvan</label>
+                        <input type="text" id="regTitle" placeholder="Örn: Ortopedi Uzmanı">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="regEmail">E-posta <span class="required">*</span></label>
+                    <input type="email" id="regEmail" placeholder="ornek@hastane.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="regUsername">Kullanıcı Adı <span class="required">*</span></label>
+                    <input type="text" id="regUsername" placeholder="kullanıcı_adi" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="regPassword">Şifre <span class="required">*</span></label>
+                        <input type="password" id="regPassword" placeholder="En az 6 karakter" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label for="regPasswordConfirm">Şifre Tekrar <span class="required">*</span></label>
+                        <input type="password" id="regPasswordConfirm" placeholder="Şifreyi tekrarlayın" required minlength="6">
+                    </div>
+                </div>
+
+                <div id="regError" class="auth-error" style="display:none"></div>
+
+                <button type="submit" class="btn btn-primary btn-block" id="btnRegister">Kayıt Ol</button>
+            </form>
+
+            <p class="auth-switch">
+                Zaten hesabınız var mı? <a href="login.html" class="link">Giriş Yap</a>
+            </p>
+        </div>
+    </section>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errEl = document.getElementById('regError');
+            errEl.style.display = 'none';
+
+            const full_name = document.getElementById('regFullName').value.trim();
+            const title     = document.getElementById('regTitle').value.trim();
+            const email     = document.getElementById('regEmail').value.trim();
+            const username  = document.getElementById('regUsername').value.trim();
+            const password  = document.getElementById('regPassword').value;
+            const password2 = document.getElementById('regPasswordConfirm').value;
+
+            if (password !== password2) {
+                errEl.textContent = 'Şifreler eşleşmiyor.';
+                errEl.style.display = 'block';
+                return;
+            }
+            if (password.length < 6) {
+                errEl.textContent = 'Şifre en az 6 karakter olmalıdır.';
+                errEl.style.display = 'block';
+                return;
+            }
+
+            const btn = document.getElementById('btnRegister');
+            btn.disabled = true;
+            btn.textContent = 'Kayıt yapılıyor...';
+
+            try {
+                const resp = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ full_name, title, email, username, password })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    window.location.href = 'login.html';
+                } else {
+                    errEl.textContent = data.error || data.message || 'Kayıt başarısız.';
+                    errEl.style.display = 'block';
+                }
+            } catch (err) {
+                console.error(err);
+                errEl.textContent = 'Sunucu hatası, lütfen daha sonra tekrar deneyin.';
+                errEl.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Kayıt Ol';
+            }
+        });
+    </script>
+</body>
+</html>
