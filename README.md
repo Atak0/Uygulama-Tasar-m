@@ -1,4 +1,4 @@
-# SpineAI WebApp - Omurga X-Ray Analiz Sistemi
+# Omurga X-Ray Analiz Sistemi
 
 SpineAI WebApp, omurga röntgen görüntüleri üzerinde yapay zeka destekli analiz yapmak için hazırlanmış Flask tabanlı bir web uygulamasıdır. Uygulama iki farklı modeli destekler:
 
